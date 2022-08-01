@@ -127,4 +127,106 @@ app.post('/add_to_cart',function(req,res){
     res.redirect('/cart');
  
  });
+ app.post('/edit_product_quantity',function(req,res){
+
+
+    var id =req.body.id;
+    var quantity=req.body.quantity;
+    var increase_btn = req.body.increase_product_quantity;
+    var decrease_btn = req.body.decrease_product_quantity;
+
+    var cart = req.session.cart;
+
+    if(increase_btn){
+        for(let i=0;i<cart.length;i++){
+            if(cart[i].id==id){
+                if(cart[i].quantity>0){
+                    cart[i].quantity=parseInt(cart[i].quantity)+1;
+                }
+            }
+        }
+    }
+    if(decrease_btn){
+        for(let i=0;i<cart.length;i++){
+            if(cart[i].id==id){
+                if(cart[i].quantity>1){
+                    cart[i].quantity=parseInt(cart[i].quantity)-1;
+                }
+            }
+        }
+    }
+    calculateTotal(cart,req);
+    res.redirect('/cart');
+ });
+
+ app.get('/checkout',function(req,res){
+    var total=req.session.total;
+    res.render('pages/checkout',{total:total})
+ })
+
+ app.post('/place_order',function(req,res){
+
+    var name = req.body.name;
+    var email = req.body.email;
+    var phone = req.body.phone;
+    var city = req.body.city;
+    var address = req.body.address;
+    var cost = req.session.total;
+    var status = "not paid";
+    var date = new Date();
+    var products_ids="";
+    var id = Date.now();
+    
+ 
+    var con = mysql.createConnection({
+       host:"localhost",
+       user:"root",
+       password:"",
+       database:"node_project"
+    })
+ 
+    var cart = req.session.cart;
+    for(let i=0; i<cart.length; i++){
+       products_ids = products_ids +","+ cart[i].id;
+    }
+
+ 
+   
+ 
+    con.connect((err)=>{
+       if(err){
+          console.log(err);
+       }else{
+          var query = "INSERT INTO orders(id,cost,name,email,status,city,address,phone,date,products_ids) VALUES ?";
+          var values = [
+             [id,cost,name,email,status,city,address,phone,date,products_ids]
+          ];
+          
+          con.query(query,[values],(err,result)=>{
+ 
+             for(let i=0;i<cart.length;i++){
+                var query = "INSERT INTO order_items(order_id,product_id,product_name,product_price,product_image,product_quantity,order_date) VALUES ?";
+                var values = [
+                   [id,cart[i].id,cart[i].name,cart[i].price,cart[i].image,cart[i].quantity,new Date()]
+                ];
+                console.log(values);
+                con.query(query,[values],(err,result)=>{})
+             }
+ 
+ 
+             res.redirect('/payment')
+                
+          
+           
+             
+          })
+       }
+    })
+    
+     
+ })
+
+ app.get('/payment',function(req,res){
+    res.render('pages/payment');
+ })
  
