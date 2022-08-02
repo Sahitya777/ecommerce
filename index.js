@@ -207,7 +207,7 @@ app.post('/place_order',function(req,res){
    var products_ids="";
    var id = Date.now();
    req.session.order_id = id;
-   
+   console.log(id);
 
    var con = mysql.createConnection({
       host:"localhost",
@@ -268,6 +268,7 @@ app.get('/payment',function(req,res){
 app.get("/verify_payment",function(req,res){
    var transaction_id = req.query.transaction_id;
    var order_id = req.session.order_id;
+   console.log(order_id);
 
    var con =  mysql.createConnection({
       host:"localhost",
